@@ -56,6 +56,14 @@ cp .env.example .env
 
 2026-07-19 실제 API 스모크에 사용한 첫 번째 입력입니다. `review_text_ko`의 `\n`은 카드에 유지할 줄바꿈입니다.
 
+### 실제 실행 이미지
+
+왼쪽은 LLM에 전달한 한국어 CSV 첫 행을 시각화한 입력이고, 오른쪽은 같은 행을 `gpt-5.6-sol`로 현지화·검수한 뒤 Pillow로 렌더링한 실제 출력입니다.
+
+| Input — 한국어 CSV 행 | Output — 일본어 리뷰 카드 |
+| --- | --- |
+| ![실제 실행에 사용한 한국어 CSV 입력](docs/examples/actual-run/input-korean-review.png) | ![OpenAI API 현지화 후 생성한 일본어 리뷰 카드](docs/examples/actual-run/output-japanese-review.png) |
+
 ### Input — `sample_reviews_ko.csv`
 
 ```csv
