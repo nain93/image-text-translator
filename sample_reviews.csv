@@ -1,0 +1,11 @@
+template,review_text,headline,pull_quote,handle,skin_type,age,before_image,after_image,output_name
+customer_review,"朝の肌が、ほんとに変わった。\n使って3日目くらいから、\n毛穴のザラつきが消えてきて、\n肌がつるんってしてきたんです！\nベタつかないのにしっかり保湿。\nメイクのノリも見違えるほど。\nこれはもうリピ確定です♡",,,@mii___23,混合肌,20代,,,sample_customer_review.png
+customer_voice,"朝の肌が、ほんとに変わった。\n使って3日目くらいから、\n毛穴のザラつきが消えてきて、\n肌がつるんってしてきたんです！\nベタつかないのにしっかり保湿。\nメイクのノリも見違えるほど。\nこれはもうリピ確定です♡",,,@uuu_di01,乾燥肌,40代,,,sample_customer_voice.png
+headline,"使って3日でこの実感。\n毛穴も気にならなくなって、\nもう手放せないんです。",朝の肌が変わった。,,@mii___23,混合肌,20代,,,sample_headline.png
+customer_review_ba,"朝の肌が、ほんとに変わった。\n使って3日目くらいから、\n毛穴のザラつきが消えてきて、\n肌がつるんってしてきたんです！\nベタつかないのにしっかり保湿。\nメイクのノリも見違えるほど。\nこれはもうリピ確定です♡",,,@m___23,混合肌,20代,sample_photos/before.png,sample_photos/after.png,sample_customer_review_ba.png
+best_review_ba,"朝の肌が、ほんとに変わった。\n毛穴のザラつきが消えてきて、\n肌がつるんってしてきたんです！\nベタつかないのにしっかり保湿。\nこれはもうリピ確定です♡",,,@m___23,混合肌,20代,sample_photos/before.png,sample_photos/after.png,sample_best_review_ba.png
+user_voice,"朝の肌が、ほんとに変わった。\n使って3日目くらいから、\n毛穴のザラつきが消えてきて、\n肌がつるんってしてきたんです！\nベタつかないのにしっかり保湿。\nメイクのノリも見違えるほど。\nこれはもうリピ確定です♡",,,ゆい,乾燥肌,30代,,,sample_user_voice.png
+customer_review_left,"朝の肌が、ほんとに変わった。\n使って3日目くらいから、\n毛穴のザラつきが消えてきて、\n肌がつるんってしてきたんです！\nベタつかないのにしっかり保湿。\nメイクのノリも見違えるほど。\nこれはもうリピ確定です♡",,,@m___23,混合肌,20代,,,sample_customer_review_left.png
+best_review_quote,"朝の肌が、ほんとに変わった。\n使って3日目くらいから、\n毛穴のザラつきが消えてきて、\n肌がつるんってしてきたんです！\nベタつかないのにしっかり保湿。\nこれはもうリピ確定です♡",,"毛穴のザラつきが消えて、\nメイクのノリも段違い！",@m___23,混合肌,20代,,,sample_best_review_quote.png
+real_voice,"朝の肌が、ほんとに変わった。\n使って3日目くらいから、\n毛穴のザラつきが消えてきて、\n肌がつるんってしてきたんです！\nベタつかないのにしっかり保湿。\nメイクのノリも見違えるほど。\nこれはもうリピ確定です♡",,,@m____23,混合肌,20代,,,sample_real_voice.png
+user_review,"使って3日でこの実感。\n毛穴も気にならなくなって、\n肌がつるんとしてきました！\nもう手放せないんです。",朝の肌が違って\nびっくりした。,,@m___23,混合肌,20代,,,sample_user_review.png

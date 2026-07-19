@@ -1,0 +1,62 @@
+{
+  "image": "image_plate/ChatGPT Image 2026년 5월 21일 오전 10_09_46 (8).png",
+  "size": [
+    1122,
+    1402
+  ],
+  "slots": {
+    "headline": {
+      "box": [
+        125,
+        435,
+        1005,
+        548
+      ],
+      "align": "left",
+      "valign": "middle",
+      "font_size": 84,
+      "leading": 1.15,
+      "weight": "Light",
+      "color": [
+        42,
+        42,
+        42
+      ]
+    },
+    "review_body": {
+      "box": [
+        128,
+        598,
+        820,
+        800
+      ],
+      "align": "left",
+      "valign": "top",
+      "font_size": 40,
+      "leading": 1.7,
+      "color": [
+        60,
+        60,
+        60
+      ],
+      "weight": "Regular"
+    },
+    "id_line": {
+      "box": [
+        218,
+        1043,
+        620,
+        1088
+      ],
+      "align": "left",
+      "valign": "middle",
+      "font_size": 24,
+      "color": [
+        115,
+        115,
+        115
+      ],
+      "weight": "Regular"
+    }
+  }
+}

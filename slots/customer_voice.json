@@ -1,0 +1,46 @@
+{
+  "image": "image_plate/b832a750-6f69-45f5-a311-6b589b0e4414.png",
+  "size": [
+    1122,
+    1402
+  ],
+  "slots": {
+    "review_body": {
+      "box": [
+        205,
+        478,
+        942,
+        1045
+      ],
+      "align": "left",
+      "valign": "top",
+      "font_size": 40,
+      "leading": 1.95,
+      "color": [
+        60,
+        60,
+        60
+      ],
+      "weight": "Regular"
+    },
+    "id_line": {
+      "box": [
+        295,
+        1205,
+        600,
+        1298
+      ],
+      "align": "left",
+      "valign": "top",
+      "font_size": 26,
+      "leading": 1.7,
+      "format": "{handle}\n{skin_type} / {age}",
+      "color": [
+        115,
+        115,
+        115
+      ],
+      "weight": "Regular"
+    }
+  }
+}
