@@ -4,8 +4,6 @@
 
 단순 번역 API 호출이 아니라 **원문 의미 보존**, **일본어 후기 말투**, **이미지 슬롯의 줄 수·글자 수 제한**을 함께 다룹니다. 의미와 문체는 LLM이 판단하고, 좌표·폰트·줄바꿈·이미지 합성은 결정론적 코드가 책임집니다.
 
-![생성된 일본어 리뷰 카드](out/sample_customer_review.png)
-
 ## 해결하려는 문제
 
 - 직역된 화장품 리뷰는 일본 소비자가 실제로 작성한 후기처럼 읽히지 않습니다.
@@ -54,7 +52,18 @@ cp .env.example .env
 # .env에 OPENAI_API_KEY 입력
 ```
 
-한국어 샘플 1건을 현지화하고 이미지까지 생성합니다.
+## 실제 사용 예시
+
+2026-07-19 실제 API 스모크에 사용한 첫 번째 입력입니다. `review_text_ko`의 `\n`은 카드에 유지할 줄바꿈입니다.
+
+### Input — `sample_reviews_ko.csv`
+
+```csv
+template,review_text_ko,handle,skin_type,age,audience,brand_tone,output_name
+customer_review,"아침 피부가 정말 달라졌어요.\n사용하고 3일쯤 지나니,\n모공의 거친 느낌이 줄어들고\n피부가 매끈하게 느껴졌어요!\n끈적이지 않는데도 촉촉했고,\n화장도 전보다 잘 받았어요.\n다시 사용하고 싶은 제품이에요♡",@mii___23,混合肌,20代,20~30대 일본 여성,과장 없이 친근한 실제 사용자 후기,llm_customer_review.png
+```
+
+### Run
 
 ```bash
 localize-reviews \
@@ -63,12 +72,50 @@ localize-reviews \
   --render
 ```
 
-결과는 기본적으로 `artifacts/<UTC timestamp>/`에 생성됩니다.
+### Output — `localized.csv`
+
+Localizer가 생성하고 Reviewer가 승인한 실제 일본어 결과입니다.
 
 ```text
-localized.csv
-localization.meta.json
-images/*.png
+朝の肌が本当に変わりました。
+使って3日ほど経つと、
+毛穴のざらつきが減って
+肌がなめらかに感じました！
+ベタつかないのにしっとり。
+メイクのりも前より良かったです。
+また使いたい商品です♡
+```
+
+### Output — `localization.meta.json`
+
+```json
+{
+  "template": "customer_review",
+  "review": {
+    "verdict": "pass",
+    "score": 98,
+    "source_fidelity": true,
+    "naturalness": true,
+    "constraint_fit": true
+  },
+  "execution": {
+    "status": "pass",
+    "revision_count": 0,
+    "api_calls": 2,
+    "token_usage": { "total": 3111 },
+    "latency_ms": 21924
+  }
+}
+```
+
+### 생성 파일
+
+```text
+artifacts/<UTC timestamp>/
+├── localized.csv
+├── localization.meta.json
+└── images/
+    └── llm_customer_review.png  # 1122×1402, 잘림·오버플로우 없음
 ```
 
 실행 결과의 검수·비용 지표를 요약할 수 있습니다.
