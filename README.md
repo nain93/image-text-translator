@@ -58,11 +58,11 @@ cp .env.example .env
 
 ### 실제 실행 이미지
 
-왼쪽은 한국어 원문을 고정 템플릿에 렌더링한 변환 전 카드이고, 오른쪽은 같은 원문을 `gpt-5.6-sol`로 현지화·검수한 실제 출력입니다. 배경·좌표·폰트 스타일은 유지하고 리뷰 텍스트만 교체했습니다.
+왼쪽은 한국어 원문을 고정 템플릿에 렌더링한 변환 전 카드이고, 오른쪽은 같은 원문을 `gpt-5.6-sol`로 현지화·검수한 실제 출력입니다. 두 PNG는 리뷰 본문 슬롯을 제외한 모든 픽셀이 동일합니다.
 
 | Input — 한국어 원문 카드 | Output — 일본어 현지화 카드 |
 | --- | --- |
-| ![동일 템플릿에 렌더링한 한국어 원문 카드](docs/examples/actual-run/input-korean-review.png) | ![OpenAI API 현지화 후 동일 템플릿에 렌더링한 일본어 리뷰 카드](docs/examples/actual-run/output-japanese-review.png) |
+| ![동일 템플릿에 렌더링한 한국어 원문 카드](docs/examples/actual-run/before-korean-customer-review.png) | ![OpenAI API 현지화 후 동일 템플릿에 렌더링한 일본어 리뷰 카드](docs/examples/actual-run/after-japanese-customer-review.png) |
 
 ### Input — `sample_reviews_ko.csv`
 

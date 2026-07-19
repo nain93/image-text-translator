@@ -53,9 +53,12 @@ def main() -> None:
     render_input_preview(
         row,
         args.slots_dir,
-        args.destination / "input-korean-review.png",
+        args.destination / "before-korean-customer-review.png",
     )
-    publish_output(args.output_image, args.destination / "output-japanese-review.png")
+    publish_output(
+        args.output_image,
+        args.destination / "after-japanese-customer-review.png",
+    )
 
 
 if __name__ == "__main__":
