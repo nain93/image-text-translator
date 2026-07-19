@@ -1,81 +1,110 @@
-# 일본 리뷰 카드 생성기 (Japanese Review Card Generator)
+# LLM Japanese Review Card Pipeline
 
-고정 디자인 템플릿(`image_plate/`)에 **일본어 리뷰 텍스트 · 메타데이터(@아이디/피부타입/연령) · 비포·애프터 사진**을 채워, 인스타용 화장품 리뷰 카드를 대량 생산합니다. ChatGPT 이미지생성의 불안정함(글자 깨짐·줄바꿈 어색·레이아웃 흔들림)을 **결정론적 합성**으로 대체하고 **일본어 검수(QA)** 를 더했습니다.
+한국어 화장품 리뷰를 일본 소비자용 카피로 현지화하고, 고정 디자인 템플릿에 합성해 SNS 리뷰 카드로 만드는 Python 프로젝트입니다.
 
+단순 번역 API 호출이 아니라 **원문 의미 보존**, **일본어 후기 말투**, **이미지 슬롯의 줄 수·글자 수 제한**을 함께 다룹니다. 의미와 문체는 LLM이 판단하고, 좌표·폰트·줄바꿈·이미지 합성은 결정론적 코드가 책임집니다.
+
+![생성된 일본어 리뷰 카드](out/sample_customer_review.png)
+
+## 해결하려는 문제
+
+- 직역된 화장품 리뷰는 일본 소비자가 실제로 작성한 후기처럼 읽히지 않습니다.
+- 생성형 이미지 모델에 일본어를 직접 그리게 하면 글자가 깨지고 레이아웃이 흔들립니다.
+- 자연스러운 문장도 정해진 카드 영역을 넘으면 디자인 결과물로 사용할 수 없습니다.
+- LLM이 원문에 없는 사용 기간이나 효능을 추가하면 콘텐츠를 신뢰하기 어렵습니다.
+
+## 파이프라인
+
+```text
+한국어 리뷰 CSV
+  → 템플릿 좌표로 줄 수·줄당 글자 수 계산
+  → OpenAI Responses API Localizer
+  → Pydantic 응답 계약 검증
+  → 독립 Reviewer 프롬프트
+      ├─ pass: 렌더링
+      └─ revise: 지적 기반 1회 수정 → 재검수
+  → Pillow 일본어 금칙처리·폰트 맞춤·이미지 합성
+  → localized.csv + PNG + API/검수 메타데이터
 ```
-CSV(리뷰+메타) ─▶ ① 일본어 QA ─▶ ② 템플릿 변수영역 갈아끼우기 ─▶ 리뷰 카드 PNG
-                  (기계검수 +        (기존 글자 지움 → 색 매칭 렌더,
-                   Claude 대화형)     비포/애프터 사진 합성)
-```
 
-> 같은 저장소의 `translate_image.py`는 원래 만든 **이미지 속 글자 번역기(한→일)** 입니다. 카드 생성기가 그 색 매칭·폰트 로직을 재사용합니다. (맨 아래 "원본 번역 도구" 참고)
+### LLM이 담당하는 부분
 
-## 1. 환경
-- `venv/`는 **Python 3.11**로 구축돼 있고 의존성 설치 완료. 실행 전 `source venv/bin/activate`.
-- 폰트: **Noto Sans CJK JP** (`brew install --cask font-noto-sans-cjk-jp` → `~/Library/Fonts/`).
-- **리뷰 카드 생성·QA는 외부 API 키가 필요 없습니다** (순수 Pillow + 로컬). 언어 검수는 Claude Code가 대화형으로 합니다.
-  - 네이버 키는 새 템플릿 슬롯 좌표를 OCR로 뽑을 때(선택)와 `translate_image.py`에만 필요 — `.env` 참고.
+- 한국어 리뷰의 주장과 경험을 보존한 일본어 현지화
+- 타깃 독자와 브랜드 톤 반영
+- 원문에 없는 효과·수치·추천 표현 추가 여부 검수
+- 레이아웃 제한을 넘는 문장 축약
 
-## 2. 리뷰 카드 만들기
+### 코드가 담당하는 부분
+
+- 템플릿과 참조 이미지 사전검증
+- 슬롯 좌표 기반 길이 제한 계산
+- 일본어 금칙처리와 폰트 크기 조절
+- 비포·애프터 사진 cover-crop 및 PNG 합성
+- 프롬프트 버전, 토큰, 지연시간, 리뷰 점수 기록
+
+## 실행
+
+Python 3.11이 필요합니다. LaMa의 Pillow 제약 때문에 3.12 이상은 지원하지 않습니다.
+
 ```bash
-# 1) 기계 검수 — 슬롯에 깨끗이 들어가는지(폰트축소·줄수·오버플로우·고아줄) 경고
-venv/bin/python qa.py --csv reviews.csv
-#    + 언어 검수(2030 여성 말투·줄바꿈·구매전환)는 Claude Code에게 텍스트를 주고 받습니다.
-
-# 2) 카드 생성
-venv/bin/python review_card.py --csv reviews.csv --out out/
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -e '.[dev]'
+cp .env.example .env
+# .env에 OPENAI_API_KEY 입력
 ```
 
-## 3. CSV 스키마
-| 열 | 필수 | 설명 |
-|---|---|---|
-| `template` | ✓ | `slots/<template>.json`의 템플릿 키 (예: `customer_review`) |
-| `review_text` | ✓ | 리뷰 본문. 줄바꿈은 리터럴 `\n`으로. 작성자 줄바꿈은 그대로 보존됨 |
-| `handle` | | `@아이디` 또는 이름 |
-| `skin_type` | | 피부타입 (乾燥肌/混合肌/脂性肌…) |
-| `age` | | 연령 (20代/30代…) |
-| `pull_quote` | | 강조 문장 (해당 슬롯이 있는 템플릿) |
-| `before_image` / `after_image` | | 비포/애프터 사진 경로 (해당 슬롯이 있는 템플릿) |
-| `output_name` | | 출력 파일명 |
+한국어 샘플 1건을 현지화하고 이미지까지 생성합니다.
 
-`handle / skin_type / age`는 `@아이디 / 피부타입 / 연령` 한 줄로 합쳐집니다. 예시는 `sample_reviews.csv` 참고.
-
-## 4. 템플릿 슬롯 스펙 (`slots/<template>.json`)
-템플릿마다 변수 영역의 좌표·스타일을 **한 번** 정의합니다.
-```json
-{
-  "image": "image_plate/....png",
-  "slots": {
-    "review_body": {"box": [x0,y0,x1,y1], "align": "left", "valign": "top", "font_size": 38, "leading": 1.75},
-    "id_line":     {"box": [x0,y0,x1,y1], "align": "left", "valign": "middle", "font_size": 27},
-    "pull_quote":  {"box": [x0,y0,x1,y1], "color": [255,150,0], "weight": "Bold"},
-    "before_image":{"box": [x0,y0,x1,y1]}, "after_image": {"box": [x0,y0,x1,y1]}
-  }
-}
-```
-**좌표 측정 팁**: `translate_image.py`의 `clova_ocr()`로 템플릿을 OCR하면 기존 글자의 박스 좌표가 나옵니다 (한국어 OCR 도메인이라 일본어 글자는 깨져 읽혀도 **박스 좌표는 정확**). 추후 빈 프레임이 와도 같은 좌표를 그대로 씁니다.
-
-## 5. 구성 파일
-- `review_card.py` — CSV → 카드 생성 (진입점)
-- `jp_layout.py` — 일본어 다행 레이아웃 (줄바꿈 + 금칙처리 + 박스 폰트맞춤)
-- `qa.py` — 기계적 QA (레이아웃 적합성)
-- `slots/*.json` — 템플릿별 슬롯 스펙
-- `image_plate/` — 디자인 템플릿 (현재는 완성본; 추후 빈 프레임으로 교체 예정)
-- `sample_reviews.csv` — 샘플 입력
-- `translate_image.py` — 원본 글자 번역기 (재사용 헬퍼 제공)
-
-## 6. 진행 상태
-- ✅ 텍스트 슬롯 합성(`review_body` / `id_line`) + 1종 템플릿(`customer_review`)
-- ✅ 일본어 레이아웃(작성자 줄바꿈 보존) + 기계 QA + Claude 대화형 언어검수
-- 🚧 비포/애프터 사진·풀쿼트 (코드 준비됨, 템플릿 슬롯 정의·테스트 예정)
-- 🚧 나머지 템플릿 슬롯 정의
-- 🚧 빈 프레임 모드 (디자이너 블랭크 틀 제공 시 erase 스킵)
-
----
-
-## 원본 번역 도구 — `translate_image.py`
-이미지 배경은 두고 **글자만** 다른 언어로 바꿉니다 (한→일 기본): CLOVA OCR → Papago 번역 → IOPaint(LaMa) 텍스트 제거 → Pillow 재렌더링.
 ```bash
-venv/bin/python translate_image.py input.png output.png --src ko --tgt ja
+localize-reviews \
+  --csv sample_reviews_ko.csv \
+  --limit 1 \
+  --render
 ```
-네이버 키 4개 필요(`.env` 또는 export): `CLOVA_OCR_URL`, `CLOVA_OCR_SECRET`, `PAPAGO_CLIENT_ID`, `PAPAGO_CLIENT_SECRET`. CLOVA OCR URL은 `https://...apigw.ntruss.com/.../general` 형태(도메인의 APIGW Invoke URL). 첫 실행 시 LaMa 모델 자동 다운로드. GPU(MPS) 쓰려면 `inpaint_lama()`의 `--device=cpu`→`mps`.
+
+결과는 기본적으로 `artifacts/<UTC timestamp>/`에 생성됩니다.
+
+```text
+localized.csv
+localization.meta.json
+images/*.png
+```
+
+실행 결과의 검수·비용 지표를 요약할 수 있습니다.
+
+```bash
+python evals/evaluate_run.py artifacts/<run>/localization.meta.json
+```
+
+## 검증
+
+```bash
+pytest -q
+ruff check .
+python review_card.py --csv sample_reviews.csv --validate-only
+```
+
+2026-07-19 실제 API 스모크에서는 1건이 Reviewer 98점으로 통과했고, 2회 API 호출 후 PNG까지 생성됐습니다. 상세 수치는 [검증 기록](docs/validation.md)에 남겼습니다.
+
+## Papago 기준선
+
+[translate_image.py](translate_image.py)는 기존 CLOVA OCR → Papago → LaMa → Pillow 경로입니다. 삭제하지 않고 LLM 현지화와 비교할 기준선으로 유지합니다. 좌표 추출과 렌더링 헬퍼도 새 파이프라인에서 재사용합니다.
+
+## 구조
+
+- `localization/contracts.py` — Pydantic 입출력 계약
+- `localization/prompts.py` — 버전이 지정된 Localizer·Reviewer·Revision 프롬프트
+- `localization/openai_gateway.py` — Responses API 호출과 사용량 수집
+- `localization/pipeline.py` — 현지화·검수·1회 수정 오케스트레이션
+- `localize_reviews.py` — CSV 배치 진입점과 결과 번들 생성
+- `review_card.py`, `jp_layout.py` — 결정론적 이미지 렌더링
+- `evals/` — 실행 결과 품질·토큰·지연시간 요약
+- `tests/` — API 없이 실행되는 계약·파이프라인·렌더 사전검증 테스트
+
+## 현재 한계
+
+- LLM Reviewer 점수는 일본어 원어민 평가를 대체하지 않습니다.
+- 효능 표현 경고는 법률·광고 심의 판단이 아니며 최종 검토가 필요합니다.
+- macOS Noto Sans CJK JP 폰트 경로를 기본값으로 사용합니다.
+- 기존 템플릿 2종은 원본 빈 프레임이 없어 과거 출력 이미지를 브리지 자산으로 사용합니다.

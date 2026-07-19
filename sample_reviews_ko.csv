@@ -1,0 +1,4 @@
+template,review_text_ko,headline_ko,pull_quote_ko,handle,skin_type,age,audience,brand_tone,before_image,after_image,output_name
+customer_review,"아침 피부가 정말 달라졌어요.\n사용하고 3일쯤 지나니,\n모공의 거친 느낌이 줄어들고\n피부가 매끈하게 느껴졌어요!\n끈적이지 않는데도 촉촉했고,\n화장도 전보다 잘 받았어요.\n다시 사용하고 싶은 제품이에요♡",,,@mii___23,混合肌,20代,20~30대 일본 여성,과장 없이 친근한 실제 사용자 후기,,,llm_customer_review.png
+headline,"사용하고 3일 만에 변화를 느꼈어요.\n모공도 전보다 덜 신경 쓰이고,\n계속 사용하고 싶어졌어요.",아침 피부가 달라졌어요.,,@mii___23,混合肌,20代,20~30대 일본 여성,차분하지만 생생한 사용자 후기,,,llm_headline.png
+best_review_quote,"아침 피부가 정말 달라졌어요.\n모공의 거친 느낌이 줄어들고,\n피부가 매끈하게 느껴졌어요!\n끈적이지 않는데도 촉촉했고,\n다시 사용하고 싶은 제품이에요♡",,"모공의 거친 느낌이 줄고,\n화장도 전보다 잘 받아요!",@mii___23,混合肌,20代,20~30대 일본 여성,구체적이고 자연스러운 베스트 리뷰,,,llm_best_review_quote.png

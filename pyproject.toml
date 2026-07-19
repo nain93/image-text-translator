@@ -24,11 +24,15 @@ dev = [
 ]
 inpaint = ["IOPaint==1.6.0"]
 
+[project.scripts]
+localize-reviews = "localize_reviews:main"
+render-review-cards = "review_card:main"
+
 [tool.setuptools]
-py-modules = ["jp_layout", "qa", "review_card", "translate_image"]
+py-modules = ["jp_layout", "localize_reviews", "qa", "review_card", "translate_image"]
 
 [tool.setuptools.packages.find]
-include = ["localization*"]
+include = ["evals*", "localization*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
