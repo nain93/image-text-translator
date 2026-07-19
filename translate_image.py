@@ -12,21 +12,19 @@ OCR (CLOVA) -> 번역 (Papago) -> 인페인팅 (IOPaint/LaMa) -> 텍스트 재�
   python translate_image.py input.png output.png --src ko --tgt ja
 """
 
-import os
-import sys
-import json
-import uuid
-import time
-import base64
 import argparse
+import json
+import os
 import subprocess
+import sys
 import tempfile
-from dataclasses import dataclass, field
-from typing import List, Tuple
+import time
+import uuid
+from dataclasses import dataclass
 
-import requests
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import requests
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 # ----------------------------------------------------------------------------
 # 설정
@@ -35,6 +33,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 # python-dotenv 미설치 시엔 조용히 건너뛰고 export된 값만 사용한다.
 try:
     from dotenv import load_dotenv
+
     load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 except ImportError:
     pass
@@ -80,14 +79,14 @@ def weighted_font_path(tgt: str, weight: str) -> str:
 class TextBox:
     text: str
     # 사각형 박스: (x0, y0, x1, y1)
-    bbox: Tuple[int, int, int, int]
+    bbox: tuple[int, int, int, int]
     translated: str = ""
 
 
 # ----------------------------------------------------------------------------
 # 1. OCR — 네이버 CLOVA OCR
 # ----------------------------------------------------------------------------
-def clova_ocr(image_path: str) -> List[TextBox]:
+def clova_ocr(image_path: str) -> list[TextBox]:
     """CLOVA OCR로 텍스트와 박스 좌표를 추출한다."""
     with open(image_path, "rb") as f:
         img_bytes = f.read()
@@ -109,7 +108,7 @@ def clova_ocr(image_path: str) -> List[TextBox]:
     resp.raise_for_status()
     result = resp.json()
 
-    boxes: List[TextBox] = []
+    boxes: list[TextBox] = []
     for field_ in result["images"][0]["fields"]:
         text = field_["inferText"]
         pts = field_["boundingPoly"]["vertices"]
@@ -120,12 +119,12 @@ def clova_ocr(image_path: str) -> List[TextBox]:
     return boxes
 
 
-def group_into_lines(boxes: List[TextBox], y_tol: int = 12) -> List[TextBox]:
+def group_into_lines(boxes: list[TextBox], y_tol: int = 12) -> list[TextBox]:
     """가까운 단어 박스를 한 줄로 묶어 자연스러운 번역 단위로 만든다."""
     if not boxes:
         return []
     boxes = sorted(boxes, key=lambda b: (b.bbox[1], b.bbox[0]))
-    lines: List[List[TextBox]] = []
+    lines: list[list[TextBox]] = []
     for b in boxes:
         placed = False
         cy = (b.bbox[1] + b.bbox[3]) / 2
@@ -138,7 +137,7 @@ def group_into_lines(boxes: List[TextBox], y_tol: int = 12) -> List[TextBox]:
         if not placed:
             lines.append([b])
 
-    merged: List[TextBox] = []
+    merged: list[TextBox] = []
     for line in lines:
         line = sorted(line, key=lambda b: b.bbox[0])
         text = " ".join(b.text for b in line)
@@ -171,7 +170,7 @@ def papago_translate(text: str, src: str = "ko", tgt: str = "ja") -> str:
 # ----------------------------------------------------------------------------
 # 3. 인페인팅 — IOPaint (LaMa)
 # ----------------------------------------------------------------------------
-def build_mask(size: Tuple[int, int], boxes: List[TextBox], pad: int = 3) -> Image.Image:
+def build_mask(size: tuple[int, int], boxes: list[TextBox], pad: int = 3) -> Image.Image:
     """텍스트 영역을 흰색으로 칠한 마스크 생성 (LaMa는 흰색=제거 영역)."""
     mask = Image.new("L", size, 0)
     draw = ImageDraw.Draw(mask)
@@ -196,7 +195,8 @@ def inpaint_lama(image_path: str, mask: Image.Image) -> Image.Image:
         mask.save(os.path.join(mask_dir, name))
 
         cmd = [
-            "iopaint", "run",
+            "iopaint",
+            "run",
             "--model=lama",
             "--device=cpu",  # GPU 사용 시 cuda
             f"--image={img_dir}",
@@ -210,7 +210,7 @@ def inpaint_lama(image_path: str, mask: Image.Image) -> Image.Image:
 # ----------------------------------------------------------------------------
 # 4. 텍스트 재렌더링 — Pillow
 # ----------------------------------------------------------------------------
-def sample_colors(orig: Image.Image, bbox: Tuple[int, int, int, int]):
+def sample_colors(orig: Image.Image, bbox: tuple[int, int, int, int]):
     """박스에서 (글자색, 배경색, 글자비율)을 추정한다.
 
     배경색 = 박스 테두리 픽셀의 중앙값(테두리는 대부분 배경).
@@ -254,8 +254,8 @@ def fit_font(text: str, box_w: int, box_h: int, font_path: str) -> ImageFont.Fre
     while lo <= hi:
         mid = (lo + hi) // 2
         font = ImageFont.truetype(font_path, mid)
-        l, t, r, b = d.textbbox((0, 0), text, font=font)
-        if (r - l) <= box_w and (b - t) <= box_h:
+        left, top, right, bottom = d.textbbox((0, 0), text, font=font)
+        if (right - left) <= box_w and (bottom - top) <= box_h:
             best = font
             lo = mid + 1
         else:
@@ -263,7 +263,9 @@ def fit_font(text: str, box_w: int, box_h: int, font_path: str) -> ImageFont.Fre
     return best
 
 
-def render_text(canvas: Image.Image, orig: Image.Image, boxes: List[TextBox], tgt: str) -> Image.Image:
+def render_text(
+    canvas: Image.Image, orig: Image.Image, boxes: list[TextBox], tgt: str
+) -> Image.Image:
     """번역문을 원본 글자색·굵기에 맞춰 다시 그린다.
 
     - 글자색/배경색을 추정해 대비가 유지되도록 칠한다.
@@ -284,10 +286,12 @@ def render_text(canvas: Image.Image, orig: Image.Image, boxes: List[TextBox], tg
         if box_w <= 1 or box_h <= 1:
             continue
         fg, bg, ratio = sample_colors(orig, b.bbox)
-        font = fit_font(b.translated, box_w, box_h, weighted_font_path(tgt, weight_for_ratio(ratio)))
-        l, t, r, btm = glow_draw.textbbox((0, 0), b.translated, font=font)
-        tx = x0 + (box_w - (r - l)) // 2 - l
-        ty = y0 + (box_h - (btm - t)) // 2 - t
+        font = fit_font(
+            b.translated, box_w, box_h, weighted_font_path(tgt, weight_for_ratio(ratio))
+        )
+        left, top, right, bottom = glow_draw.textbbox((0, 0), b.translated, font=font)
+        tx = x0 + (box_w - (right - left)) // 2 - left
+        ty = y0 + (box_h - (bottom - top)) // 2 - top
         # 어두운 배경 + 밝은 글자 = 네온풍 → 글로우 대상
         neon = (sum(bg) / 3 < 110) and (sum(fg) / 3 > 140)
         stroke_w = max(1, font.size // 22)
@@ -302,8 +306,7 @@ def render_text(canvas: Image.Image, orig: Image.Image, boxes: List[TextBox], tg
 
     draw = ImageDraw.Draw(canvas)
     for text, font, fg, bg, tx, ty, stroke_w in plan:
-        draw.text((tx, ty), text, font=font, fill=fg,
-                  stroke_width=stroke_w, stroke_fill=bg)
+        draw.text((tx, ty), text, font=font, fill=fg, stroke_width=stroke_w, stroke_fill=bg)
     return canvas
 
 

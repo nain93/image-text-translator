@@ -8,17 +8,18 @@ Claude Code가 대화형으로 검수한다. 이 모듈은 객관적으로 잴 �
 사용법:
   python qa.py --csv reviews.csv
 """
-import os
-import sys
+
+import argparse
 import csv
 import json
-import argparse
+import os
+
+from PIL import Image, ImageDraw
+
+import jp_layout
+import translate_image as ti
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
-from PIL import Image, ImageDraw
-import translate_image as ti
-import jp_layout
 
 
 def _dummy_draw():
@@ -34,8 +35,10 @@ def check_slot(draw, text: str, slot: dict) -> dict:
     font_path = ti.weighted_font_path("ja", slot.get("weight", "Regular"))
     font, lines, line_h = jp_layout.fit(draw, text, bw, bh, font_path, target, leading)
     return {
-        "target": target, "final": font.size,
-        "lines": len(lines), "author_lines": len(text.split("\n")),
+        "target": target,
+        "final": font.size,
+        "lines": len(lines),
+        "author_lines": len(text.split("\n")),
         "rewrapped": len(lines) > len(text.split("\n")),
         "overflow": line_h * len(lines) > bh,
     }
@@ -48,7 +51,11 @@ def warnings_for(name: str, r: dict):
     if r["rewrapped"]:
         out.append(f"  ⚠ {name}: 폭 초과로 자동 재줄바꿈 발생(고아줄 위험). 작성자 줄을 더 짧게.")
     if r["final"] < r["target"] * 0.85 and not r["overflow"]:
-        out.append(f"  ⚠ {name}: 글자가 {r['final']}px로 축소됨(디자인 {r['target']}px). 줄을 짧게/적게 하면 커집니다.")
+        message = (
+            f"  ⚠ {name}: 글자가 {r['final']}px로 축소됨"
+            f"(디자인 {r['target']}px). 줄을 짧게/적게 하면 커집니다."
+        )
+        out.append(message)
     return out
 
 
@@ -64,7 +71,7 @@ def run_qa(csv_path: str, slots_dir: str):
             print(f"[{i}] 템플릿 스펙 없음: {template!r}")
             continue
         slots = json.load(open(spec_path, encoding="utf-8"))["slots"]
-        print(f"\n[{i}] {template}  ({row.get('output_name','')})")
+        print(f"\n[{i}] {template}  ({row.get('output_name', '')})")
         texts = {
             "review_body": (row.get("review_text") or "").replace("\\n", "\n"),
             "headline": (row.get("headline") or "").replace("\\n", "\n"),
@@ -87,7 +94,7 @@ def run_qa(csv_path: str, slots_dir: str):
             flagged += 1
         else:
             print("  ✓ 기계적 검수 통과")
-    print(f"\n총 {len(rows)}건 중 기계적 경고 {flagged}건. (언어 검수는 Claude Code가 대화형으로 진행)")
+    print(f"\n총 {len(rows)}건 중 기계적 경고 {flagged}건.")
 
 
 if __name__ == "__main__":

@@ -5,11 +5,13 @@ review_card.py 가 텍스트 슬롯을 그릴 때 쓴다. 핵심 규칙:
 - 한 줄이 박스 폭을 넘으면 글자 단위로 다시 줄바꿈하되, 행두/행말 금칙을 지킨다.
 - 글자 크기는 target_size에서 시작해, 전체가 박스 높이에 들어올 때까지 줄인다(오버플로우 방지).
 """
-from typing import List, Tuple
-from PIL import ImageFont, ImageDraw
+
+from PIL import ImageDraw, ImageFont
 
 # 행두 금지: 줄 첫 글자로 올 수 없는 문자(앞 줄로 끌어올림)
-KINSOKU_START = set("、。，．,.・:：;；?？!！)）]］}｝」』】〉》〕ー…〜～々ぁぃぅぇぉっゃゅょゎ゛゜ヽヾゝゞ♡")
+KINSOKU_START = set(
+    "、。，．,.・:：;；?？!！)）]］}｝」』】〉》〕ー…〜～々ぁぃぅぇぉっゃゅょゎ゛゜ヽヾゝゞ♡"
+)
 # 행말 금지: 줄 끝 글자로 올 수 없는 문자(다음 줄로 내림)
 KINSOKU_END = set("(（[［{｛「『【〈《〔")
 
@@ -17,13 +19,13 @@ KINSOKU_END = set("(（[［{｛「『【〈《〔")
 def _text_w(draw: ImageDraw.ImageDraw, s: str, font: ImageFont.FreeTypeFont) -> int:
     if not s:
         return 0
-    l, _, r, _ = draw.textbbox((0, 0), s, font=font)
-    return r - l
+    left, _, right, _ = draw.textbbox((0, 0), s, font=font)
+    return right - left
 
 
-def wrap_paragraph(draw, text: str, font, max_w: int) -> List[str]:
+def wrap_paragraph(draw, text: str, font, max_w: int) -> list[str]:
     """한 단락(작성자 개행 단위)을 폭에 맞게 자르되 금칙처리."""
-    lines: List[str] = []
+    lines: list[str] = []
     cur = ""
     for ch in text:
         if not cur or _text_w(draw, cur + ch, font) <= max_w:
@@ -43,16 +45,24 @@ def wrap_paragraph(draw, text: str, font, max_w: int) -> List[str]:
     return lines
 
 
-def wrap_text(draw, text: str, font, max_w: int) -> List[str]:
+def wrap_text(draw, text: str, font, max_w: int) -> list[str]:
     """작성자 개행(\n) 보존 + 각 단락 폭 맞춤 줄바꿈."""
-    out: List[str] = []
+    out: list[str] = []
     for para in text.split("\n"):
         out.extend(wrap_paragraph(draw, para, font, max_w) if para else [""])
     return out
 
 
-def fit(draw, text: str, box_w: int, box_h: int, font_path: str,
-        target_size: int, leading: float, min_size: int = 10):
+def fit(
+    draw,
+    text: str,
+    box_w: int,
+    box_h: int,
+    font_path: str,
+    target_size: int,
+    leading: float,
+    min_size: int = 10,
+):
     """target_size부터 1px씩 줄여 박스에 들어오는 (font, lines, line_h)를 찾는다.
 
     작성자 줄바꿈(\n)을 우선 보존한다. 즉 각 작성자 줄이 통째로 폭에 맞도록 폰트를 줄인다
@@ -72,10 +82,19 @@ def fit(draw, text: str, box_w: int, box_h: int, font_path: str,
     return font, wrap_text(draw, text, font, box_w), int(round(min_size * leading))
 
 
-def draw_block(draw, text: str, box: Tuple[int, int, int, int], font_path: str,
-               target_size: int, leading: float, fill,
-               align: str = "left", valign: str = "top",
-               stroke_width: int = 0, stroke_fill=None) -> dict:
+def draw_block(
+    draw,
+    text: str,
+    box: tuple[int, int, int, int],
+    font_path: str,
+    target_size: int,
+    leading: float,
+    fill,
+    align: str = "left",
+    valign: str = "top",
+    stroke_width: int = 0,
+    stroke_fill=None,
+) -> dict:
     """박스 안에 다행 텍스트를 그린다. 실제 사용한 폰트크기/줄수를 반환(검증·로그용)."""
     x0, y0, x1, y1 = box
     box_w, box_h = x1 - x0, y1 - y0
@@ -96,6 +115,12 @@ def draw_block(draw, text: str, box: Tuple[int, int, int, int], font_path: str,
             lx = x1 - w
         else:
             lx = x0
-        draw.text((lx, ly), ln, font=font, fill=fill,
-                  stroke_width=stroke_width, stroke_fill=stroke_fill or fill)
+        draw.text(
+            (lx, ly),
+            ln,
+            font=font,
+            fill=fill,
+            stroke_width=stroke_width,
+            stroke_fill=stroke_fill or fill,
+        )
     return {"size": font.size, "lines": len(lines), "overflow": total_h > box_h}
