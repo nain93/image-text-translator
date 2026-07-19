@@ -76,58 +76,6 @@ cp .env.example .env
 | --- | --- |
 | ![동일 템플릿에 렌더링한 한국어 원문 카드](docs/examples/actual-run/before-korean-customer-review.png) | ![OpenAI API 현지화 후 동일 템플릿에 렌더링한 일본어 리뷰 카드](docs/examples/actual-run/after-japanese-customer-review.png) |
 
-### Input — `sample_reviews_ko.csv`
-
-```csv
-template,review_text_ko,handle,skin_type,age,audience,brand_tone,output_name
-customer_review,"아침 피부가 정말 달라졌어요.\n사용하고 3일쯤 지나니,\n모공의 거친 느낌이 줄어들고\n피부가 매끈하게 느껴졌어요!\n끈적이지 않는데도 촉촉했고,\n화장도 전보다 잘 받았어요.\n다시 사용하고 싶은 제품이에요♡",@mii___23,混合肌,20代,20~30대 일본 여성,과장 없이 친근한 실제 사용자 후기,llm_customer_review.png
-```
-
-### Run
-
-```bash
-localize-reviews \
-  --csv sample_reviews_ko.csv \
-  --limit 1 \
-  --render
-```
-
-### Output — `localized.csv`
-
-Localizer가 생성하고 Reviewer가 승인한 실제 일본어 결과입니다.
-
-```text
-朝の肌が本当に変わりました。
-使って3日ほど経つと、
-毛穴のざらつきが減って
-肌がなめらかに感じました！
-ベタつかないのにしっとり。
-メイクのりも前より良かったです。
-また使いたい商品です♡
-```
-
-### Output — `localization.meta.json`
-
-```json
-{
-  "template": "customer_review",
-  "review": {
-    "verdict": "pass",
-    "score": 98,
-    "source_fidelity": true,
-    "naturalness": true,
-    "constraint_fit": true
-  },
-  "execution": {
-    "status": "pass",
-    "revision_count": 0,
-    "api_calls": 2,
-    "token_usage": { "total": 3111 },
-    "latency_ms": 21924
-  }
-}
-```
-
 ### 생성 파일
 
 ```text
